@@ -28,5 +28,5 @@ dependencies {
 
 After this dependency is included, you can start using functionality contained in this library to perform operations in CM|PayPlaza environment.
 
-See doc file for full explanation. 
+See file in doc folder in this project for more information on how to work with this library.
 
