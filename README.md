@@ -22,7 +22,7 @@ Next, add the dependency to your app-level build.gradle
 ```groovy
 dependencies {
     // CM|PayPlaza Android POS Integration library
-    implementation 'com.github.CMDotCom:androidposintegrationsdk:1.0.0'
+    implementation 'com.github.cmdotcom:androidposintegrationsdk:1.0.0'
 }
 ```
 
