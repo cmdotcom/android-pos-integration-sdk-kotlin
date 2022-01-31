@@ -19,10 +19,21 @@ allprojects {
 
 Next, add the dependency to your app-level build.gradle
 
+Debug:
+
 ```groovy
 dependencies {
     // CM|PayPlaza Android POS Integration library
-    implementation 'com.github.cmdotcom:androidposintegrationsdk:1.0.0'
+    implementation 'com.github.cmdotcom.android-pos-integration-sdk-kotlin:androidposintegrationsdk-debug:<version-tag>'
+}
+```
+
+Production:
+
+```groovy
+dependencies {
+    // CM|PayPlaza Android POS Integration library
+    implementation 'com.github.cmdotcom.android-pos-integration-sdk-kotlin:androidposintegrationsdk:<version-tag>'
 }
 ```
 
