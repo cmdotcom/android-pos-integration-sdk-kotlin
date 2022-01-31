@@ -19,7 +19,7 @@ allprojects {
 
 Next, add the dependency to your app-level build.gradle
 
-Debug:
+Development:
 
 ```groovy
 dependencies {
