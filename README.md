@@ -41,3 +41,4 @@ After this dependency is included, you can start using functionality contained i
 
 See file in doc folder in this project for more information on how to work with this library.
 
+Note: an [example](https://github.com/cmdotcom/sunmi-ecr-example-kotlin) of how to implement the Integration SDK is available
