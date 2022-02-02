@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'maven-publish'
     id 'kotlin-parcelize'
 }
 
@@ -52,6 +53,7 @@ android {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
 
 dependencies {
 
@@ -68,4 +70,26 @@ dependencies {
     implementation "androidx.core:core-ktx:+"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.google.code.gson:gson:2.8.7'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+
+            mavenAar(MavenPublication) {
+                groupId = "com.cm.payments"
+                artifactId = rootProject.name
+                version = project.android.defaultConfig.versionName
+                artifact bundleReleaseAar
+            }
+
+            mavenAarDebug(MavenPublication) {
+                groupId = "com.cm.payments"
+                artifactId = "${rootProject.name}-debug"
+                version = project.android.defaultConfig.versionName
+                artifact bundleDebugAar
+            }
+
+        }
+    }
 }
