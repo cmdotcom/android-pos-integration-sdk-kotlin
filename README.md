@@ -6,13 +6,12 @@ This repository contains the implementation of a library that allows your applic
 You can include this library into your Android project by adding first the JitPack repository to your root build.gradle
 
 ```groovy
-allprojects {
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
-        jcenter()
-        maven {
-            url 'https://jitpack.io'
-        }
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 ```
