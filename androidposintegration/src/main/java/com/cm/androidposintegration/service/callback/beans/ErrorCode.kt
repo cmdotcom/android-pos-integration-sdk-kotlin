@@ -13,6 +13,7 @@ enum class ErrorCode(val value: Int, val desc: String): Parcelable {
     PRINTER_INIT_FAIL (-17, "Printer initialization failed"),
     POS_NOT_CONFIGURED (-18, "Device is not configured in gateway"),
     BAD_TIMEZONE (-24, "Timezone on the device is not correct"),
+    AUTO_TIMEZONE_NOT_ENABLED(-23, "Autotimezone is not enabled on device"),
     HOST_NOT_CONNECTED (-25, "Cannot connect with the gateway"),
     MERCHANT_ORDER_REF_NOT_PRESENT (-29, "Order reference not present in request data"),
     TIMEOUT (-30, "Timeout reaching the gateway"),
