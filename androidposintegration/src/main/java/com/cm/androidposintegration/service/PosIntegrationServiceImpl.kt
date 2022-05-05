@@ -6,10 +6,7 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import com.cm.androidposintegration.IntegrationActivity
-import com.cm.androidposintegration.beans.DayTotalsOptions
-import com.cm.androidposintegration.beans.LastReceiptOptions
-import com.cm.androidposintegration.beans.RequestStatusData
-import com.cm.androidposintegration.beans.TransactionData
+import com.cm.androidposintegration.beans.*
 import com.cm.androidposintegration.enums.TransactionType
 import com.cm.androidposintegration.intent.IntentHelper
 import com.cm.androidposintegration.intent.IntentHelper.MAX_ORDER_REF_LENGTH
@@ -19,8 +16,6 @@ import com.cm.androidposintegration.service.callback.StatusesCallback
 import com.cm.androidposintegration.service.callback.TerminalInfoCallback
 import com.cm.androidposintegration.service.callback.TransactionCallback
 import com.cm.androidposintegration.service.callback.beans.ErrorCode
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -54,7 +49,13 @@ class PosIntegrationServiceImpl: PosIntegrationService {
      */
     fun unregisterReceiver(): Boolean {
         contextIntegration?.let {
-            it.unregisterReceiver(internalReceiver)
+            try {
+                it.unregisterReceiver(internalReceiver)
+            } catch (e: Exception) {
+                Log.w(TAG, "POS Integration library has recovered from and error " +
+                        "while unregistering the receiver")
+
+            }
             internalReceiver = null
             return true
         }
@@ -73,6 +74,7 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         // so everything can be done safely
         contextIntegration?.let {
             val intent = Intent(contextIntegration, IntegrationActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.putExtras(data)
 
             // send the intent to start the operation in PayPlaza apps
@@ -105,7 +107,6 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         if (data.orderReference.length > MAX_ORDER_REF_LENGTH){
             callback.onError(ErrorCode.MERCHANT_ORDER_REF_TOO_LONG)
             return
-
         }
         intentData.putString(IntentHelper.EXTRA_ORD_REF, data.orderReference)
 
@@ -116,7 +117,6 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
         if (data.language != null) {
             intentData.putString(IntentHelper.EXTRA_LANGUAGE, data.language)
-
         }
         if (data.type == TransactionType.REFUND) {
 
@@ -135,30 +135,27 @@ class PosIntegrationServiceImpl: PosIntegrationService {
 
         // Register the receiver for when the result is back from PayPlaza side
         if (!registerReceiver()) {
+            Log.e(TAG, "Cannot register receiver")
             callback.onCrash()
             return
-
         }
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {
             it.txCallback = callback
-
         }
 
         // Set the service instance that is handling the transaction
         internalReceiver?.let {
             it.integrationServiceImpl = this
-
         }
 
         // Send intent to start the transaction in Payplaza Side
         if (!sendIntentForOperation(intentData)) {
+            Log.e(TAG, "Cannot send the operation")
             callback.onCrash()
             return
-
         }
-
     }
 
     /**
@@ -339,6 +336,71 @@ class PosIntegrationServiceImpl: PosIntegrationService {
 
         }
 
+    }
+
+    override fun finishPreAuth(data: PreAuthFinishData, callback: TransactionCallback) {
+        // Create the intent data for the transaction
+        val intentData = Bundle()
+
+        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION)
+        Log.d(TAG, "Payment data object recieved $data")
+
+        // Adding the mandatory extras for the intent payment
+        intentData.putString(IntentHelper.EXTRA_TRANSACTION_FLOW, IntentHelper.FLOW_PAYMENT)
+        intentData.putString(IntentHelper.EXTRA_TRANSACTION_TYPE, data.type.value)
+        data.amount?.let {
+            intentData.putSerializable(IntentHelper.EXTRA_AMOUNT, it)
+        }
+
+        data.currency?.let {
+            intentData.putString(IntentHelper.EXTRA_CURRENCY_CODE, it.currencyCode)
+        }
+
+
+        if (data.orderRef.length > MAX_ORDER_REF_LENGTH){
+            Log.d(TAG, "Order ref too long")
+            callback.onError(ErrorCode.MERCHANT_ORDER_REF_TOO_LONG)
+            return
+
+        }
+
+        intentData.putString(IntentHelper.EXTRA_ORD_REF, data.orderRef)
+
+        val dateFormat: DateFormat = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+        val transactionDate = dateFormat.format(data.originalDate)
+        intentData.putString(IntentHelper.EXTRA_STAN, data.originalStan)
+        intentData.putString(IntentHelper.EXTRA_TRANSACTION_DATE, transactionDate)
+        intentData.putBoolean(IntentHelper.EXTRA_SHOW_RECEIPT, data.isShowReceipt)
+        intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
+        Log.d(TAG, "Date to payplaza apps: ${transactionDate}")
+
+        lastOrderRef = data.orderRef
+
+        // Register the receiver for when the result is back from PayPlaza side
+        if (!registerReceiver()) {
+            callback.onCrash()
+            return
+
+        }
+
+        // Set the callback to send the result to the caller
+        internalReceiver?.let {
+            it.txCallback = callback
+
+        }
+
+        // Set the service instance that is handling the transaction
+        internalReceiver?.let {
+            it.integrationServiceImpl = this
+
+        }
+
+        // Send intent to start the transaction in Payplaza Side
+        if (!sendIntentForOperation(intentData)) {
+            callback.onCrash()
+            return
+
+        }
     }
 
 }

@@ -12,6 +12,9 @@ object IntentHelper {
     // Transaction type extras
     const val TYPE_PURCHASE = "purchase"
     const val TYPE_REFUND = "refund"
+    const val TYPE_PRE_AUTH = "pre_auth"
+    const val TYPE_SALE_PRE_AUTH = "sale_pre_auth"
+    const val TYPE_CANCEL_PRE_AUTH = "cancel_pre_auth"
 
     // Payment Request extras.
     const val EXTRA_TRANSACTION_FLOW = "com.payplaza.extra.TRANSACTION_FLOW"

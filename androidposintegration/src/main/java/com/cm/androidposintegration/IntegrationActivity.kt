@@ -65,8 +65,8 @@ open class IntegrationActivity : Activity() {
     private fun checkAndSendIntent() {
         if (intentPayment != null) {
             intentPayment!!.putExtras(intent)
-            Log.d(TAG, "Sending intent ${intentPayment}")
-            if(intentPayment!!.resolveActivity(getPackageManager()) != null) {
+            Log.d(TAG, "Sending intent $intentPayment")
+            if(intentPayment!!.resolveActivity(packageManager) != null) {
                 startActivityForResult(intentPayment, requestId)
 
             } else {
@@ -141,7 +141,7 @@ open class IntegrationActivity : Activity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        Log.d(TAG, "Received response from Payplaza apps $requestCode, $resultCode, ${data}")
+        Log.d(TAG, "Received response from Payplaza apps $requestCode, $resultCode, $data")
         val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
         internalBroadcast.putExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, resultCode)
 
