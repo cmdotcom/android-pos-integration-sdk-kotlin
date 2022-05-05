@@ -10,16 +10,12 @@ This repository contains the implementation of a library that allows your applic
 
 | SDK   | Terminal |
 | ----- | -------- |
-<<<<<<< HEAD
 | 1.1.0 | 1.2.0    |
-=======
->>>>>>> a660988835bd5edf7055bf3f3caca2bdc9bf249a
 | 1.0.1 | 1.1.1    |
 | 1.0.0 | 1.1.1    |
 
 ### Versions
 
-<<<<<<< HEAD
 #### 1.1.0
 
 * Added Start pre authorization support
@@ -27,8 +23,6 @@ This repository contains the implementation of a library that allows your applic
 * Added Confirm pre authorization support
 * Check device's battery
 
-=======
->>>>>>> a660988835bd5edf7055bf3f3caca2bdc9bf249a
 #### 1.0.1
 
 * Forward AUTO_TIMEZONE_ENABLE error from Terminal
