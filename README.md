@@ -85,3 +85,4 @@ After this dependency is included, you can start using functionality contained i
 See file in [doc folder](https://github.com/cmdotcom/android-pos-integration-sdk-kotlin/tree/main/doc) in this project for more information on how to work with this library.
 
 Also an [example](https://github.com/cmdotcom/sunmi-ecr-example-kotlin) of how to implement the Integration SDK is available.
+[//]: # "Test"
