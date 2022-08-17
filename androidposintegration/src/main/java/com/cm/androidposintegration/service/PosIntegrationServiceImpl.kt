@@ -5,7 +5,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
-import com.cm.androidposintegration.IntegrationActivity
+import com.cm.androidposintegration.activity.IntegrationActivity
 import com.cm.androidposintegration.beans.*
 import com.cm.androidposintegration.enums.TransactionType
 import com.cm.androidposintegration.intent.IntentHelper

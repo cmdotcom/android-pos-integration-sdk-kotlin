@@ -1,17 +1,41 @@
-package com.cm.androidposintegration
+package com.cm.androidposintegration.activity
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.cm.androidposintegration.intent.IntentHelper
+import com.cm.androidposintegration.intent.IntentHelper.TIMEOUT_REACHED
 import com.cm.androidposintegration.service.callback.RequestId
 
-open class IntegrationActivity : Activity() {
+open class IntegrationActivity : AppCompatActivity() {
 
     private var TAG = IntegrationActivity::class.java.simpleName
     private var intentPayment : Intent? = null
-    private var requestId = -1
+
+    private lateinit var viewModel : IntegrationViewModel
+
+    private val getTerminalResult =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            Log.d(TAG, "Received response from Payplaza apps ${viewModel.getOperationType()}, ${result.resultCode}, ${result.data}")
+            val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
+            internalBroadcast.putExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, result.resultCode)
+
+            // Process the information received in the intent
+            if (result.data != null) {
+                internalBroadcast.putExtras(result.data!!)
+            }
+
+            sendInternalBroadcast(viewModel.getOperationType(), internalBroadcast)
+            sendBroadcast(internalBroadcast)
+            finish()
+        }
 
 
     /**
@@ -20,7 +44,8 @@ open class IntegrationActivity : Activity() {
      * to payplaza apps (Transaction, receipt, totals, statuses)
      * @param operationType is the operation type received on the intent that created this activity
      */
-    private fun createIntentAndRequestIds(operationType: String) {
+    private fun createIntentAndOperationType(operationType: String) {
+        var requestId = -1
         when (operationType) {
             IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION -> {
                 intentPayment = Intent(BuildConfig.ACTION_TRANSACTION)
@@ -53,12 +78,15 @@ open class IntegrationActivity : Activity() {
 
             }
         }
+
+        viewModel.setOperationType(requestId)
     }
 
     private fun createBroadcastForError(): Intent {
-        Log.w(TAG, "No payplaza payment apps in the device or intent for kicking them wrongly created")
+        Log.w(TAG, "No payplaza payment apps in the device, intent for kicking them wrongly created or Terminal crashed")
+        Log.w(TAG, "Starting onCrash callback mechanism.  ${viewModel.getOperationType()}")
         val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
-        sendInternalBroadcast(requestId, internalBroadcast)
+        sendInternalBroadcast(viewModel.getOperationType(), internalBroadcast)
         return internalBroadcast
     }
 
@@ -67,7 +95,7 @@ open class IntegrationActivity : Activity() {
             intentPayment!!.putExtras(intent)
             Log.d(TAG, "Sending intent $intentPayment")
             if(intentPayment!!.resolveActivity(packageManager) != null) {
-                startActivityForResult(intentPayment, requestId)
+                getTerminalResult.launch(intentPayment) //startActivityForResult(intentPayment, requestId)
 
             } else {
                 sendBroadcast(createBroadcastForError())
@@ -84,17 +112,23 @@ open class IntegrationActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Log.d(TAG,"\"Created\" activity for kick payplaza ecr")
-        // createActionsForRequests()
+        if (savedInstanceState != null) {
+            Log.d(TAG, "Saved Instance already")
+        }
+        viewModel =  ViewModelProvider(this).get(IntegrationViewModel::class.java)
         val operationType = intent.getStringExtra(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE)
-        if (operationType != null) {
-            createIntentAndRequestIds(operationType)
+        if (savedInstanceState == null && operationType != null) {
+            Log.d(TAG,"\"Created\" activity for kick payplaza Terminal")
+            createIntentAndOperationType(operationType)
             checkAndSendIntent()
 
-        } else {
+        } else if (savedInstanceState == null && operationType == null) {
             Log.d(TAG,"No OperationType received. Ending the request")
             sendBroadcast(createBroadcastForError())
             finish()
+
+        } else {
+            Log.d(TAG, "Activity already created. Not kicking payplaza Terminal")
 
         }
 
@@ -138,7 +172,7 @@ open class IntegrationActivity : Activity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    /*override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         Log.d(TAG, "Received response from Payplaza apps $requestCode, $resultCode, $data")
@@ -147,14 +181,13 @@ open class IntegrationActivity : Activity() {
 
         // Process the information received in the intent
         if (data != null) {
-            sendInternalBroadcast(requestCode, internalBroadcast)
             internalBroadcast.putExtras(data)
         }
 
-
+        sendInternalBroadcast(requestCode, internalBroadcast)
         sendBroadcast(internalBroadcast)
         finish()
-    }
+    }*/
 
 
 }

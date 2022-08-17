@@ -80,4 +80,5 @@ object IntentHelper {
     const val EXTRA_TERMINAL_VERSION_NUMBER = "com.payplaza.extra.TERMINAL_VERSION_NUMBER"
 
     const val MAX_ORDER_REF_LENGTH = 14
+    const val TIMEOUT_REACHED = 1
 }

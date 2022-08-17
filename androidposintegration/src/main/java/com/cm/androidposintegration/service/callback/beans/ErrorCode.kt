@@ -20,8 +20,10 @@ enum class ErrorCode(val value: Int, val desc: String): Parcelable {
     REPEATED_OPERATION (-31, "Transaction already in progress"),
     MERCHANT_ORDER_REF_TOO_LONG (-32, "Order ref exceeds allowed length"),
     AMOUNT_LIMIT_EXCEEDED (-33, "Transaction exceeds allowed limit"),
+    EXCEPTION_THROWN (-34, "Exception thrown during transaction flow. Transaction couldn't be processed"),
     INVALID_ORIGINAL_DATA(-35, "Data related with previous transaction is invalid"),
     LOW_BATTERY_LEVEL(-36, "Battery level is too low to start a transaction"),
+    WRONG_EMV_AUTHORIZATION_DATE_AND_TIME(-37, "Wrong date and time in authorization request. Please reboot your device."),
     TRANSACTION_STATUS_ERROR (-50, "Status information not received"),
     INFO_REQUEST_FAILED (-51, "Info Request towards the gateway has failed");
 

@@ -82,6 +82,6 @@ dependencies {
 
 After this dependency is included, you can start using functionality contained in this library to perform operations in CM|PayPlaza environment.
 
-See file in [doc folder](https://github.com/cmdotcom/android-pos-integration-sdk-kotlin/tree/main/doc) in this project for more information on how to work with this library.
+More information on how to work with this library is available in the following link: [Getting started with App 2 app integration (cm.com)](https://developers.cm.com/payments-platform/v1.0.2/docs/app-2-app-integration).
 
 Also an [example](https://github.com/cmdotcom/sunmi-ecr-example-kotlin) of how to implement the Integration SDK is available.

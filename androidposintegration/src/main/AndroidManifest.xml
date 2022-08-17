@@ -3,7 +3,8 @@
     package="com.cm.androidposintegration">
 
     <application>
-        <activity android:name="com.cm.androidposintegration.IntegrationActivity"/>
+        <activity android:name="com.cm.androidposintegration.activity.IntegrationActivity"
+            android:theme="@style/Theme.AppCompat"/>
     </application>
 
 </manifest>
