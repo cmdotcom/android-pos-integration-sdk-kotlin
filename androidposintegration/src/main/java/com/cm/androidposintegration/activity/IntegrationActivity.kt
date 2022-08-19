@@ -1,15 +1,13 @@
 package com.cm.androidposintegration.activity
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.cm.androidposintegration.BuildConfig
 import com.cm.androidposintegration.intent.IntentHelper
-import com.cm.androidposintegration.intent.IntentHelper.TIMEOUT_REACHED
 import com.cm.androidposintegration.service.callback.RequestId
 
 open class IntegrationActivity : AppCompatActivity() {
