@@ -41,7 +41,6 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         }
 
         return false
-
     }
 
     /**
