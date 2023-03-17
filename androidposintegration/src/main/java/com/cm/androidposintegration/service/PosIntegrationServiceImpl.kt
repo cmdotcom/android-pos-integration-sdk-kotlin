@@ -11,55 +11,54 @@ import com.cm.androidposintegration.enums.TransactionType
 import com.cm.androidposintegration.intent.IntentHelper
 import com.cm.androidposintegration.intent.IntentHelper.MAX_ORDER_REF_LENGTH
 import com.cm.androidposintegration.service.beans.OperationResultBroadcastReceiver
-import com.cm.androidposintegration.service.callback.ReceiptCallback
-import com.cm.androidposintegration.service.callback.StatusesCallback
-import com.cm.androidposintegration.service.callback.TerminalInfoCallback
-import com.cm.androidposintegration.service.callback.TransactionCallback
+import com.cm.androidposintegration.service.callback.*
 import com.cm.androidposintegration.service.callback.beans.ErrorCode
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-class PosIntegrationServiceImpl: PosIntegrationService {
+class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIntegrationService {
     private var TAG = PosIntegrationServiceImpl::class.java.simpleName
-    private var contextIntegration: Context? = null
+
+    // private var contextIntegration: Context? = null
     private var internalReceiver: OperationResultBroadcastReceiver? = null
     private var lastOrderRef: String? = null
 
-    fun setContext(context: Context) {
-        contextIntegration = context
-    }
+    private var operationInProgress = false
 
     /**
      * Creates a new receiver and registers it on the context given
      */
     private fun registerReceiver(): Boolean {
-        contextIntegration?.let {
-            internalReceiver = OperationResultBroadcastReceiver()
-            it.registerReceiver(internalReceiver, IntentFilter(IntentHelper.INTEGRATION_BROADCAST_INTENT))
-            return true
-        }
 
-        return false
+        internalReceiver = OperationResultBroadcastReceiver()
+        contextIntegration.registerReceiver(
+            internalReceiver,
+            IntentFilter(IntentHelper.INTEGRATION_BROADCAST_INTENT)
+        )
+        return true
+
     }
 
     /**
      * Unregisters the current receiver from the context and deletes it.
      */
     fun unregisterReceiver(): Boolean {
-        contextIntegration?.let {
-            try {
-                it.unregisterReceiver(internalReceiver)
-            } catch (e: Exception) {
-                Log.w(TAG, "POS Integration library has recovered from and error " +
-                        "while unregistering the receiver")
 
-            }
-            internalReceiver = null
-            return true
+        try {
+            contextIntegration.unregisterReceiver(internalReceiver)
+        } catch (e: Exception) {
+            Log.w(
+                TAG, "POS Integration library has recovered from and error " +
+                        "while unregistering the receiver"
+            )
+
         }
+        internalReceiver = null
+        operationInProgress = false
+        Log.w("", "unregisterReceiver - operationInProgress $operationInProgress")
+        return true
 
-        return false
     }
 
     /**
@@ -71,17 +70,21 @@ class PosIntegrationServiceImpl: PosIntegrationService {
     private fun sendIntentForOperation(data: Bundle): Boolean {
         // Make sure that the context is not null in the library
         // so everything can be done safely
-        contextIntegration?.let {
-            val intent = Intent(contextIntegration, IntegrationActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.putExtras(data)
 
-            // send the intent to start the operation in PayPlaza apps
-            it.startActivity(intent)
-            return true
-        }
+        val intent = Intent(contextIntegration, IntegrationActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.putExtras(data)
 
-        return false
+        // send the intent to start the operation in PayPlaza apps
+        contextIntegration.startActivity(intent)
+        operationInProgress = true
+        Log.w("","sendIntentForOperation - operationInProgress $operationInProgress")
+        return true
+
+    }
+
+    private fun operationInProgressError(callback: AndroidPOSIntegrationCallback) {
+        callback.onError(ErrorCode.REPEATED_OPERATION)
     }
 
     /**
@@ -92,10 +95,20 @@ class PosIntegrationServiceImpl: PosIntegrationService {
      *                  the operation is done
      */
     override fun doTransaction(data: TransactionData, callback: TransactionCallback) {
+
+        Log.w("", "DoTransaction - operationInProgress $operationInProgress")
+        if (operationInProgress) {
+            operationInProgressError(callback)
+            return
+        }
+
         // Create the intent data for the transaction
         val intentData = Bundle()
 
-        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION)
+        intentData.putString(
+            IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
+            IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION
+        )
         Log.d(TAG, "Payment data object recieved $data")
 
         // Adding the mandatory extras for the intent payment
@@ -103,14 +116,13 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         intentData.putString(IntentHelper.EXTRA_TRANSACTION_TYPE, data.type.value)
         intentData.putSerializable(IntentHelper.EXTRA_AMOUNT, data.amount)
         intentData.putString(IntentHelper.EXTRA_CURRENCY_CODE, data.currency.currencyCode)
-        if (data.orderReference.length > MAX_ORDER_REF_LENGTH){
+        if (data.orderReference.length > MAX_ORDER_REF_LENGTH) {
             callback.onError(ErrorCode.MERCHANT_ORDER_REF_TOO_LONG)
             return
         }
         intentData.putString(IntentHelper.EXTRA_ORD_REF, data.orderReference)
 
         // Adding optional information for the intent payment
-        intentData.putBoolean(IntentHelper.EXTRA_TIPPING, data.isTipping)
         intentData.putBoolean(IntentHelper.EXTRA_CAPTURE_SIGNATURE, data.isCaptureSignature)
         intentData.putBoolean(IntentHelper.EXTRA_SHOW_RECEIPT, data.isShowReceipt)
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
@@ -120,7 +132,7 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         if (data.type == TransactionType.REFUND) {
 
             data.refundStan?.let { stan ->
-                data.refundDate?.let {date ->
+                data.refundDate?.let { date ->
                     val dateFormat: DateFormat = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
                     val transactionDate = dateFormat.format(date)
                     intentData.putString(IntentHelper.EXTRA_STAN, stan)
@@ -133,11 +145,7 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         lastOrderRef = data.orderReference
 
         // Register the receiver for when the result is back from PayPlaza side
-        if (!registerReceiver()) {
-            Log.e(TAG, "Cannot register receiver")
-            callback.onCrash()
-            return
-        }
+        registerReceiver()
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {
@@ -166,9 +174,17 @@ class PosIntegrationServiceImpl: PosIntegrationService {
      */
     override fun transactionStatuses(data: RequestStatusData, callback: StatusesCallback) {
 
+        if (operationInProgress) {
+            operationInProgressError(callback)
+            return
+        }
+
         // Create the intent for the request
         val intentData = Bundle()
-        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_STATUSES)
+        intentData.putString(
+            IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
+            IntentHelper.EXTRA_INFORMATION_VALUE_STATUSES
+        )
 
         // Adding the mandatory extras for the intent payment
         if (data.orderReference != null && data.orderReference!!.length > 0) {
@@ -183,11 +199,7 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         }
 
         // Register the receiver for when the result is back from PayPlaza side
-        if (!registerReceiver()) {
-            callback.onCrash()
-            return
-
-        }
+        registerReceiver()
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {
@@ -218,19 +230,23 @@ class PosIntegrationServiceImpl: PosIntegrationService {
      */
     override fun getLastReceipt(options: LastReceiptOptions, callback: ReceiptCallback) {
 
+        if (operationInProgress) {
+            operationInProgressError(callback)
+            return
+        }
+
         // Create the intent data for the request
         val intentData = Bundle()
-        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_RECEIPT)
+        intentData.putString(
+            IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
+            IntentHelper.EXTRA_INFORMATION_VALUE_RECEIPT
+        )
         intentData.putString(IntentHelper.EXTRA_TRANSACTION_FLOW, IntentHelper.FLOW_RECEIPT)
         intentData.putBoolean(IntentHelper.EXTRA_SHOW_RECEIPT, options.isShowReceipt)
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
 
         // Register the receiver for when the result is back from PayPlaza side
-        if (!registerReceiver()) {
-            callback.onCrash()
-            return
-
-        }
+        registerReceiver()
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {
@@ -264,20 +280,25 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         options: DayTotalsOptions,
         callback: ReceiptCallback
     ) {
+
+        if (operationInProgress) {
+            operationInProgressError(callback)
+            return
+        }
+
         // Create the intent data for the request
         val intentData = Bundle()
-        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_TOTALS)
+        intentData.putString(
+            IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
+            IntentHelper.EXTRA_INFORMATION_VALUE_TOTALS
+        )
         intentData.putString(IntentHelper.EXTRA_TRANSACTION_FLOW, IntentHelper.FLOW_TOTALS)
         intentData.putBoolean(IntentHelper.EXTRA_SHOW_RECEIPT, options.isShowReceipt)
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
         intentData.putString(IntentHelper.EXTRA_DAY_TOTALS_FROM, options.from)
 
         // Register the receiver for when the result is back from PayPlaza side
-        if (!registerReceiver()) {
-            callback.onCrash()
-            return
-
-        }
+        registerReceiver()
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {
@@ -305,16 +326,21 @@ class PosIntegrationServiceImpl: PosIntegrationService {
      * @param callback is the callback object to send the result to the caller
      */
     override fun getTerminalInfo(callback: TerminalInfoCallback) {
+
+        if (operationInProgress) {
+            operationInProgressError(callback)
+            return
+        }
+
         // Intent data for the request to PayPlaza side
         val intentData = Bundle()
-        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_INFO)
+        intentData.putString(
+            IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
+            IntentHelper.EXTRA_INFORMATION_VALUE_INFO
+        )
 
         // Register the receiver for when the result is back from PayPlaza side
-        if (!registerReceiver()) {
-            callback.onCrash()
-            return
-
-        }
+        registerReceiver()
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {
@@ -338,10 +364,19 @@ class PosIntegrationServiceImpl: PosIntegrationService {
     }
 
     override fun finishPreAuth(data: PreAuthFinishData, callback: TransactionCallback) {
+
+        if (operationInProgress) {
+            operationInProgressError(callback)
+            return
+        }
+
         // Create the intent data for the transaction
         val intentData = Bundle()
 
-        intentData.putString(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION)
+        intentData.putString(
+            IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
+            IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION
+        )
         Log.d(TAG, "Payment data object recieved $data")
 
         // Adding the mandatory extras for the intent payment
@@ -356,7 +391,7 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         }
 
 
-        if (data.orderRef.length > MAX_ORDER_REF_LENGTH){
+        if (data.orderRef.length > MAX_ORDER_REF_LENGTH) {
             Log.d(TAG, "Order ref too long")
             callback.onError(ErrorCode.MERCHANT_ORDER_REF_TOO_LONG)
             return
@@ -376,11 +411,7 @@ class PosIntegrationServiceImpl: PosIntegrationService {
         lastOrderRef = data.orderRef
 
         // Register the receiver for when the result is back from PayPlaza side
-        if (!registerReceiver()) {
-            callback.onCrash()
-            return
-
-        }
+        registerReceiver()
 
         // Set the callback to send the result to the caller
         internalReceiver?.let {

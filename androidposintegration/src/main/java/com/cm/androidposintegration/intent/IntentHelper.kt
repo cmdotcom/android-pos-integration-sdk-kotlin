@@ -21,7 +21,6 @@ object IntentHelper {
     const val EXTRA_TRANSACTION_TYPE = "com.payplaza.extra.TRANSACTION_TYPE"
     const val EXTRA_CURRENCY_CODE = "com.payplaza.extra.CURRENCY_CODE"
     const val EXTRA_AMOUNT = "com.payplaza.extra.AMOUNT"
-    const val EXTRA_TIPPING = "com.payplaza.extra.TIPPING"
     const val EXTRA_CAPTURE_SIGNATURE = "com.payplaza.extra.CAPTURE_SIGNATURE"
     const val EXTRA_LANGUAGE = "com.payplaza.extra.LANGUAGE"
     const val EXTRA_ORD_REF = "com.payplaza.extra.ORDERREF"

@@ -6,9 +6,9 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.cm.androidposintegration.BuildConfig
 import com.cm.androidposintegration.intent.IntentHelper
 import com.cm.androidposintegration.service.callback.RequestId
+import com.payplaza.androidposintegration.BuildConfig
 
 open class IntegrationActivity : AppCompatActivity() {
 
@@ -91,8 +91,8 @@ open class IntegrationActivity : AppCompatActivity() {
     private fun checkAndSendIntent() {
         if (intentPayment != null) {
             intentPayment!!.putExtras(intent)
-            Log.d(TAG, "Sending intent $intentPayment")
-            if(intentPayment!!.resolveActivity(packageManager) != null) {
+            Log.d(TAG, "Sending intent ${intentPayment}")
+            if(intentPayment!!.resolveActivity(getPackageManager()) != null) {
                 getTerminalResult.launch(intentPayment) //startActivityForResult(intentPayment, requestId)
 
             } else {
@@ -110,9 +110,6 @@ open class IntegrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (savedInstanceState != null) {
-            Log.d(TAG, "Saved Instance already")
-        }
         viewModel =  ViewModelProvider(this).get(IntegrationViewModel::class.java)
         val operationType = intent.getStringExtra(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE)
         if (savedInstanceState == null && operationType != null) {
@@ -173,7 +170,7 @@ open class IntegrationActivity : AppCompatActivity() {
     /*override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        Log.d(TAG, "Received response from Payplaza apps $requestCode, $resultCode, $data")
+        Log.d(TAG, "Received response from Payplaza apps $requestCode, $resultCode, ${data}")
         val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
         internalBroadcast.putExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, resultCode)
 

@@ -3,20 +3,29 @@ plugins {
     id 'kotlin-android'
     id 'maven-publish'
     id 'kotlin-parcelize'
+    id "org.jetbrains.dokka" version "1.5.31"
+    id 'org.asciidoctor.jvm.pdf' version '3.1.0'
+}
+
+ext {
+    kotlin_version = '1.5.31'
+    actionTrans = ".action.TRANSACTION"
+    actionStatusesRequest = ".action.TRANSACTION_STATUS_REQUEST"
+    actionInfoRequest = ".action.INFO"
 }
 
 android {
-    compileSdk 31
+    compileSdkVersion 31
 
     defaultConfig {
-
-        minSdk 25
-        targetSdk 31
-        versionCode 4
-        versionName "1.1.2"
-
+        minSdkVersion 25
+        targetSdkVersion 31
+        versionCode 16
+        versionName "1.1.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        setProperty("archivesBaseName", "androidposintegration-$versionName")
     }
 
     buildTypes {
@@ -29,14 +38,31 @@ android {
             buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${actionStatusesRequest}\""
             buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${actionInfoRequest}\""
 
+          }
+
+        crt {
+            debuggable false
+            def env = ".crt"
+            def intentPrefix = "com.payplaza"
+            buildConfigField "String", "ACTION_TRANSACTION", "\"${intentPrefix}${env}${actionTrans}\""
+            buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${env}${actionStatusesRequest}\""
+            buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${env}${actionInfoRequest}\""
+
         }
 
         debug {
             debuggable true
-
             def env = ".dev"
             def intentPrefix = "com.payplaza"
+            buildConfigField "String", "ACTION_TRANSACTION", "\"${intentPrefix}${env}${actionTrans}\""
+            buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${env}${actionStatusesRequest}\""
+            buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${env}${actionInfoRequest}\""
+        }
 
+        local {
+            debuggable true
+            def env = ".local"
+            def intentPrefix = "com.payplaza"
             buildConfigField "String", "ACTION_TRANSACTION", "\"${intentPrefix}${env}${actionTrans}\""
             buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${env}${actionStatusesRequest}\""
             buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${env}${actionInfoRequest}\""
@@ -49,47 +75,80 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    testOptions.unitTests.all {
+        testLogging {
+            events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
+        }
+    }
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
+task copyApks(type: Copy) {
+    from("$projectDir/build/outputs/apk")
+    include '**/*.apk'
+    into "$rootDir/artifacts"
+}
+
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.activity:activity-ktx:1.4.0'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    implementation 'com.google.android.material:material:1.4.0'
-
+    androidTestImplementation('androidx.test:runner:1.4.0')
     androidTestImplementation('androidx.test:rules:1.4.0')
     androidTestImplementation('androidx.test.espresso:espresso-intents:3.4.0')
-    implementation "androidx.core:core-ktx:+"
+    implementation "androidx.core:core-ktx:1.8.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.google.code.gson:gson:2.8.7'
+    implementation 'com.google.code.gson:gson:2.9.0'
 }
 
 afterEvaluate {
     publishing {
         publications {
-
+            // Creates a Maven publication called "release".
             mavenAar(MavenPublication) {
-                groupId = "com.cm.payments"
+                groupId = "com.payplaza.payments"
                 artifactId = rootProject.name
                 version = project.android.defaultConfig.versionName
                 artifact bundleReleaseAar
             }
 
             mavenAarDebug(MavenPublication) {
-                groupId = "com.cm.payments"
+                groupId = "com.payplaza.payments"
                 artifactId = "${rootProject.name}-debug"
                 version = project.android.defaultConfig.versionName
                 artifact bundleDebugAar
             }
 
+            mavenAarCrt(MavenPublication) {
+                groupId = "com.payplaza.payments"
+                artifactId = "${rootProject.name}-crt"
+                version = project.android.defaultConfig.versionName
+                artifact bundleCrtAar
+            }
+        }
+        repositories {
+            maven {
+                name = "gitlab"
+                url = uri("https://gitlab.com/api/v4/projects/${System.getenv("CI_PROJECT_ID")}/packages/maven")
+                credentials(HttpHeaderCredentials) {
+                    name = "Job-Token"
+                    value = System.getenv("CI_JOB_TOKEN")
+                }
+                authentication {
+                    header(HttpHeaderAuthentication)
+                }
+            }
         }
     }
+}
+repositories {
+    mavenCentral()
 }

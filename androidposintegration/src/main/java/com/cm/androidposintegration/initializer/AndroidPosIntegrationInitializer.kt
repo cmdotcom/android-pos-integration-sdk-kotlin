@@ -5,16 +5,14 @@ import com.cm.androidposintegration.service.PosIntegrationServiceImpl
 
 class AndroidPosIntegrationInitializer {
 
-    var service: PosIntegrationServiceImpl = PosIntegrationServiceImpl()
+    private var service: PosIntegrationServiceImpl? = null
 
-    fun create(context: Context): PosIntegrationServiceImpl {
-
-        service.setContext(context)
-
+    fun create(context: Context): PosIntegrationServiceImpl? {
+        service = PosIntegrationServiceImpl(context)
         return service
     }
 
-    fun getInstance(): PosIntegrationServiceImpl {
+    fun getInstance(): PosIntegrationServiceImpl? {
         return service
     }
 }

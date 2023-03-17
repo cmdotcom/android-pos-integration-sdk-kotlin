@@ -10,11 +10,32 @@ This repository contains the implementation of a library that allows your applic
 
 | SDK   | Terminal |
 | ----- | -------- |
+| 1.1.3 | 2.0.1    |
+| 1.1.2 | 2.0.0    |
+| 1.1.1 | 1.2.4    |
 | 1.1.0 | 1.2.0    |
 | 1.0.1 | 1.1.1    |
 | 1.0.0 | 1.1.1    |
 
 ### Versions
+
+#### 1.1.3
+
+* Not start new operation if another one is already in progress
+
+* Remove isTipping parameter from SDK payment Data
+
+#### 1.1.2
+
+* Proguard problems in some scenarios
+
+#### 1.1.1
+
+* ECR App does not trigger the payment twice via the intent
+
+* Add timeout mechanism to SDK
+
+* Add wrong date of authorization request to SDK
 
 #### 1.1.0
 

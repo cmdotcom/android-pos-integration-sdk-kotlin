@@ -14,8 +14,6 @@ data class TransactionData(val type: TransactionType,
     var refundDate: Date? = null
     var isCaptureSignature = true
     var isShowReceipt = true
-    var isTipping = false
-
 
     override fun toString() : String {
         return "PaymentData { 'TransactionType' : $type, " +
@@ -25,8 +23,7 @@ data class TransactionData(val type: TransactionType,
                 "'orderRef' : ${orderReference}, " +
                 "'refundStan' : ${refundStan}, " +
                 "'refundDate' : ${refundDate}, " +
-                "'Tip' : ${isTipping}," +
-                "'captureSignature' : ${isCaptureSignature} }"
+                "'captureSignature' : $isCaptureSignature }"
     }
 
 }
