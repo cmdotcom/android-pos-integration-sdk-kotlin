@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.cm.androidposintegration.intent.IntentHelper
 import com.cm.androidposintegration.service.callback.RequestId
-import com.payplaza.androidposintegration.BuildConfig
+import com.cm.androidposintegration.BuildConfig
 
 open class IntegrationActivity : AppCompatActivity() {
 

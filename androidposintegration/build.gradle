@@ -39,29 +39,9 @@ android {
             buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${actionInfoRequest}\""
 
           }
-
-        crt {
-            debuggable false
-            def env = ".crt"
-            def intentPrefix = "com.payplaza"
-            buildConfigField "String", "ACTION_TRANSACTION", "\"${intentPrefix}${env}${actionTrans}\""
-            buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${env}${actionStatusesRequest}\""
-            buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${env}${actionInfoRequest}\""
-
-        }
-
         debug {
             debuggable true
             def env = ".dev"
-            def intentPrefix = "com.payplaza"
-            buildConfigField "String", "ACTION_TRANSACTION", "\"${intentPrefix}${env}${actionTrans}\""
-            buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${env}${actionStatusesRequest}\""
-            buildConfigField "String", "ACTION_INFO", "\"${intentPrefix}${env}${actionInfoRequest}\""
-        }
-
-        local {
-            debuggable true
-            def env = ".local"
             def intentPrefix = "com.payplaza"
             buildConfigField "String", "ACTION_TRANSACTION", "\"${intentPrefix}${env}${actionTrans}\""
             buildConfigField "String", "ACTION_STATUSES", "\"${intentPrefix}${env}${actionStatusesRequest}\""
@@ -74,12 +54,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
-    }
-
-    testOptions.unitTests.all {
-        testLogging {
-            events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
-        }
     }
 }
 
@@ -112,43 +86,19 @@ dependencies {
 afterEvaluate {
     publishing {
         publications {
-            // Creates a Maven publication called "release".
             mavenAar(MavenPublication) {
-                groupId = "com.payplaza.payments"
+                groupId = "com.cm.payments"
                 artifactId = rootProject.name
                 version = project.android.defaultConfig.versionName
                 artifact bundleReleaseAar
             }
 
             mavenAarDebug(MavenPublication) {
-                groupId = "com.payplaza.payments"
+                groupId = "com.cm.payments"
                 artifactId = "${rootProject.name}-debug"
                 version = project.android.defaultConfig.versionName
                 artifact bundleDebugAar
             }
-
-            mavenAarCrt(MavenPublication) {
-                groupId = "com.payplaza.payments"
-                artifactId = "${rootProject.name}-crt"
-                version = project.android.defaultConfig.versionName
-                artifact bundleCrtAar
-            }
-        }
-        repositories {
-            maven {
-                name = "gitlab"
-                url = uri("https://gitlab.com/api/v4/projects/${System.getenv("CI_PROJECT_ID")}/packages/maven")
-                credentials(HttpHeaderCredentials) {
-                    name = "Job-Token"
-                    value = System.getenv("CI_JOB_TOKEN")
-                }
-                authentication {
-                    header(HttpHeaderAuthentication)
-                }
-            }
         }
     }
-}
-repositories {
-    mavenCentral()
 }
