@@ -15,7 +15,7 @@ enum class TransactionResult (val description: String): Parcelable {
     DECLINED_BY_CARD ("Operation was declined by card"),
     INSUFFICIENT_FUNDS ("Not sufficient funds to perform last authorization"),
     FAILED ("Operation failed"),
-    AMOUNT_EXCEEDED ("Amount of las operation exceeded the limit"),
+    AMOUNT_EXCEEDED ("Amount of last operation exceeded the limit"),
     HOST_BLOCKED_PRINT_RECEIPT ("Operation couldn't be performed. Receipt of the last transaction pending"),
     REQUEST_RECEIPT("Request Receipt of current transaction"),
     AUTO_TIMEZONE_NOT_ENABLED("Autotimezone is not enabled on device");

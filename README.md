@@ -9,7 +9,8 @@ This repository contains the implementation of a library that allows your applic
 ### Compatibility table
 
 | SDK   | Terminal |
-| ----- | -------- |
+| ----- |----------|
+| 1.1.4 | 2.7.0    |
 | 1.1.3 | 2.0.1    |
 | 1.1.2 | 2.0.0    |
 | 1.1.0 | 1.2.0    |
@@ -17,6 +18,10 @@ This repository contains the implementation of a library that allows your applic
 | 1.0.0 | 1.1.1    |
 
 ### Versions
+
+#### 1.1.4
+* Fix typo in error description
+* Send information about SDK version to Terminal app
 
 #### 1.1.3
 

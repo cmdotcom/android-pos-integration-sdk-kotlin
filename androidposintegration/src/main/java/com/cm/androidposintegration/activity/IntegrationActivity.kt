@@ -21,7 +21,7 @@ open class IntegrationActivity : AppCompatActivity() {
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            Log.d(TAG, "Received response from Payplaza apps ${viewModel.getOperationType()}, ${result.resultCode}, ${result.data}")
+            Log.d(TAG, "Received response from CM apps ${viewModel.getOperationType()}, ${result.resultCode}, ${result.data}")
             val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
             internalBroadcast.putExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, result.resultCode)
 
@@ -37,9 +37,9 @@ open class IntegrationActivity : AppCompatActivity() {
 
 
     /**
-     * Creates the intent to use for payplaza apps and the requestId to use
+     * Creates the intent to use for CM apps and the requestId to use
      * so at response time, androidposIntegration knows what has been requested
-     * to payplaza apps (Transaction, receipt, totals, statuses)
+     * to CM apps (Transaction, receipt, totals, statuses)
      * @param operationType is the operation type received on the intent that created this activity
      */
     private fun createIntentAndOperationType(operationType: String) {
@@ -81,7 +81,7 @@ open class IntegrationActivity : AppCompatActivity() {
     }
 
     private fun createBroadcastForError(): Intent {
-        Log.w(TAG, "No payplaza payment apps in the device, intent for kicking them wrongly created or Terminal crashed")
+        Log.w(TAG, "No CM payment apps in the device, intent for kicking them wrongly created or Terminal crashed")
         Log.w(TAG, "Starting onCrash callback mechanism.  ${viewModel.getOperationType()}")
         val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
         sendInternalBroadcast(viewModel.getOperationType(), internalBroadcast)
@@ -93,7 +93,7 @@ open class IntegrationActivity : AppCompatActivity() {
             intentPayment!!.putExtras(intent)
             Log.d(TAG, "Sending intent ${intentPayment}")
             if(intentPayment!!.resolveActivity(getPackageManager()) != null) {
-                getTerminalResult.launch(intentPayment) //startActivityForResult(intentPayment, requestId)
+                getTerminalResult.launch(intentPayment)
 
             } else {
                 sendBroadcast(createBroadcastForError())
@@ -110,10 +110,10 @@ open class IntegrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel =  ViewModelProvider(this).get(IntegrationViewModel::class.java)
+        viewModel =  ViewModelProvider(this)[IntegrationViewModel::class.java]
         val operationType = intent.getStringExtra(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE)
         if (savedInstanceState == null && operationType != null) {
-            Log.d(TAG,"\"Created\" activity for kick payplaza Terminal")
+            Log.d(TAG,"\"Created\" activity for kick CM Terminal")
             createIntentAndOperationType(operationType)
             checkAndSendIntent()
 
@@ -123,7 +123,7 @@ open class IntegrationActivity : AppCompatActivity() {
             finish()
 
         } else {
-            Log.d(TAG, "Activity already created. Not kicking payplaza Terminal")
+            Log.d(TAG, "Activity already created. Not kicking CM Terminal")
 
         }
 
@@ -132,7 +132,7 @@ open class IntegrationActivity : AppCompatActivity() {
     /**
      * Sends an internal broadcast with the result of the operation that has been requested
      * It uses the requestCode to know which operation has been requested
-     * @param requestCode request Id that was sent to payplaza apps
+     * @param requestCode request Id that was sent to CM apps
      * @param internalBroadcast is the current broadcast intent that is going to be sent internally
      */
     private fun sendInternalBroadcast(requestCode: Int, internalBroadcast: Intent) {
@@ -166,23 +166,4 @@ open class IntegrationActivity : AppCompatActivity() {
 
         }
     }
-
-    /*override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        Log.d(TAG, "Received response from Payplaza apps $requestCode, $resultCode, ${data}")
-        val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
-        internalBroadcast.putExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, resultCode)
-
-        // Process the information received in the intent
-        if (data != null) {
-            internalBroadcast.putExtras(data)
-        }
-
-        sendInternalBroadcast(requestCode, internalBroadcast)
-        sendBroadcast(internalBroadcast)
-        finish()
-    }*/
-
-
 }

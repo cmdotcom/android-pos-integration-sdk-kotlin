@@ -33,6 +33,7 @@ object IntentHelper {
     const val EXTRA_SHOW_RECEIPT = "com.payplaza.extra.SHOW_RECEIPT"
     const val EXTRA_USE_PROC_STYLE_PROTOCOL = "com.payplaza.extra.USE_PROC_STYLE_PROTOCOL"
     const val EXTRA_DAY_TOTALS_FROM = "com.payplaza.extra.DAY_TOTALS_FROM"
+    const val EXTRA_SDK_VERSION = "com.payplaza.extra.SDK_VERSION"
 
     // Payment Response extras.
     const val EXTRA_TRANSACTION_RESULT = "com.payplaza.extra.TRANSACTION_RESULT"
