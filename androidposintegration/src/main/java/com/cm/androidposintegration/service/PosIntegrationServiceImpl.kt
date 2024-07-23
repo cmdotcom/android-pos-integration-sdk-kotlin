@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
+import com.cm.androidposintegration.BuildConfig
 import com.cm.androidposintegration.activity.IntegrationActivity
 import com.cm.androidposintegration.beans.*
 import com.cm.androidposintegration.enums.TransactionType
@@ -62,7 +63,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
     }
 
     /**
-     * Send an internal intent to start the appropriate operation in PayPlaza side
+     * Send an internal intent to start the appropriate operation in CM side
      * @param data is the data for the operation that needs to be sent.
      * @return true if the intent could be sent
      *          false otherwise.
@@ -75,7 +76,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.putExtras(data)
 
-        // send the intent to start the operation in PayPlaza apps
+        // send the intent to start the operation in CM apps
         contextIntegration.startActivity(intent)
         operationInProgress = true
         Log.w("","sendIntentForOperation - operationInProgress $operationInProgress")
@@ -89,7 +90,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
     /**
      * Gets the payment data received, creates the internal intent and launches the
-     * integrationActivity to send the intent request to payplaza apps
+     * integrationActivity to send the intent request to CM apps
      * @param data payment data to perform the transaction
      * @param callback transaction callback that is going to be called back when
      *                  the operation is done
@@ -137,14 +138,17 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
                     val transactionDate = dateFormat.format(date)
                     intentData.putString(IntentHelper.EXTRA_STAN, stan)
                     intentData.putString(IntentHelper.EXTRA_TRANSACTION_DATE, transactionDate)
-                    Log.d(TAG, "Date to payplaza apps: ${transactionDate}")
+                    Log.d(TAG, "Date to CM apps: ${transactionDate}")
                 }
             }
         }
 
+        Log.d(TAG, "Version name of this library is " + BuildConfig.VERSION_NAME)
+        intentData.putString(IntentHelper.EXTRA_SDK_VERSION, BuildConfig.VERSION_NAME)
+
         lastOrderRef = data.orderReference
 
-        // Register the receiver for when the result is back from PayPlaza side
+        // Register the receiver for when the result is back from CM side
         registerReceiver()
 
         // Set the callback to send the result to the caller
@@ -157,7 +161,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
             it.integrationServiceImpl = this
         }
 
-        // Send intent to start the transaction in Payplaza Side
+        // Send intent to start the transaction in CM Side
         if (!sendIntentForOperation(intentData)) {
             Log.e(TAG, "Cannot send the operation")
             callback.onCrash()
@@ -167,7 +171,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
     /**
      * Gets the statuses data received, creates the internal intent and launches the
-     * integrationActivity to send the intent request to payplaza apps
+     * integrationActivity to send the intent request to CM apps
      * @param data statuses data to perform the operation
      * @param callback statuses callback that is going to be called back when
      *                  the operation is done
@@ -198,7 +202,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         }
 
-        // Register the receiver for when the result is back from PayPlaza side
+        // Register the receiver for when the result is back from CM side
         registerReceiver()
 
         // Set the callback to send the result to the caller
@@ -213,7 +217,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         }
 
-        // Send intent to start the transaction in Payplaza Side
+        // Send intent to start the transaction in CM Side
         if (!sendIntentForOperation(intentData)) {
             callback.onCrash()
             return
@@ -223,7 +227,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
     /**
      * Gets the Last receipt options received, creates the internal intent and launches the
-     * integrationActivity to send the intent request to payplaza apps
+     * integrationActivity to send the intent request to CM apps
      * @param options options of the request to perform the operation
      * @param callback Receipt callback that is going to be called back when
      *                  the operation is done
@@ -245,7 +249,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
         intentData.putBoolean(IntentHelper.EXTRA_SHOW_RECEIPT, options.isShowReceipt)
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
 
-        // Register the receiver for when the result is back from PayPlaza side
+        // Register the receiver for when the result is back from CM side
         registerReceiver()
 
         // Set the callback to send the result to the caller
@@ -260,7 +264,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         }
 
-        // Send intent to start the operation in Payplaza Side
+        // Send intent to start the operation in CM Side
         if (!sendIntentForOperation(intentData)) {
             callback.onCrash()
             return
@@ -271,7 +275,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
     /**
      * Gets the Day Totals options received, creates the internal intent and launches the
-     * integrationActivity to send the intent request to payplaza apps
+     * integrationActivity to send the intent request to CM apps
      * @param options options to perform the transaction
      * @param callback Receipt callback that is going to be called back when
      *                  the operation is done
@@ -297,7 +301,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
         intentData.putString(IntentHelper.EXTRA_DAY_TOTALS_FROM, options.from)
 
-        // Register the receiver for when the result is back from PayPlaza side
+        // Register the receiver for when the result is back from CM side
         registerReceiver()
 
         // Set the callback to send the result to the caller
@@ -312,7 +316,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         }
 
-        // Send intent to start the operation in Payplaza Side
+        // Send intent to start the operation in CM Side
         if (!sendIntentForOperation(intentData)) {
             callback.onCrash()
             return
@@ -332,14 +336,14 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
             return
         }
 
-        // Intent data for the request to PayPlaza side
+        // Intent data for the request to CM side
         val intentData = Bundle()
         intentData.putString(
             IntentHelper.EXTRA_INTERNAL_INTENT_TYPE,
             IntentHelper.EXTRA_INFORMATION_VALUE_INFO
         )
 
-        // Register the receiver for when the result is back from PayPlaza side
+        // Register the receiver for when the result is back from CM side
         registerReceiver()
 
         // Set the callback to send the result to the caller
@@ -354,7 +358,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         }
 
-        // Send intent to start the operation in Payplaza Side
+        // Send intent to start the operation in CM Side
         if (!sendIntentForOperation(intentData)) {
             callback.onCrash()
             return
@@ -406,11 +410,11 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
         intentData.putString(IntentHelper.EXTRA_TRANSACTION_DATE, transactionDate)
         intentData.putBoolean(IntentHelper.EXTRA_SHOW_RECEIPT, data.isShowReceipt)
         intentData.putBoolean(IntentHelper.EXTRA_USE_PROC_STYLE_PROTOCOL, true)
-        Log.d(TAG, "Date to payplaza apps: ${transactionDate}")
+        Log.d(TAG, "Date to CM apps: ${transactionDate}")
 
         lastOrderRef = data.orderRef
 
-        // Register the receiver for when the result is back from PayPlaza side
+        // Register the receiver for when the result is back from CM side
         registerReceiver()
 
         // Set the callback to send the result to the caller
@@ -425,7 +429,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         }
 
-        // Send intent to start the transaction in Payplaza Side
+        // Send intent to start the transaction in CM Side
         if (!sendIntentForOperation(intentData)) {
             callback.onCrash()
             return

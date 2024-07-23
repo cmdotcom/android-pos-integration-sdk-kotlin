@@ -20,20 +20,20 @@ import com.cm.androidposintegration.service.callback.json.StatusResponseParser
 import java.lang.IllegalArgumentException
 import java.util.*
 
-class OperationResultBroadcastReceiver: BroadcastReceiver() {
+class OperationResultBroadcastReceiver : BroadcastReceiver() {
     private var TAG = OperationResultBroadcastReceiver::class.java.simpleName
 
     var integrationServiceImpl: PosIntegrationServiceImpl? = null
-    var txCallback : TransactionCallback? = null
-    var statusesCallback : StatusesCallback? = null
-    var receiptCallback : ReceiptCallback? = null
-    var totalsCallback : ReceiptCallback? = null
+    var txCallback: TransactionCallback? = null
+    var statusesCallback: StatusesCallback? = null
+    var receiptCallback: ReceiptCallback? = null
+    var totalsCallback: ReceiptCallback? = null
     var infoCallback: TerminalInfoCallback? = null
 
 
     /**
-     * gets the error code received from Payplaza apps.
-     * @param data intent received as a response from payplaza apps
+     * gets the error code received from CM apps.
+     * @param data intent received as a response from CM apps
      */
     private fun getErrorCode(data: Intent?): Int {
         if (data != null) {
@@ -45,7 +45,7 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
 
     }
 
-    private fun getStringExtraIfNotNull (data: Intent, extraName: String): String? {
+    private fun getStringExtraIfNotNull(data: Intent, extraName: String): String? {
         if (data.hasExtra(extraName)) {
             return data.getStringExtra(extraName)
 
@@ -55,20 +55,16 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
     }
 
     /**
-     * Converts the Transaction result received from payplaza apps to the appropriate TransactionResult
-     * @param data intent received as result form payplaza apps
+     * Converts the Transaction result received from CM apps to the appropriate TransactionResult
+     * @param data intent received as result form CM apps
      */
     private fun matchTransactionResult(data: Intent?, extra2Watch: String): TransactionResult {
-        if (data != null) {
-            if (data.hasExtra(extra2Watch)) {
-                try {
-                    return TransactionResult.valueOf(data.getStringExtra(extra2Watch)!!.uppercase())
-
-                } catch (iae: IllegalArgumentException) {
-                    Log.e(TAG,"Type received not recognised", iae)
-                    return TransactionResult.FAILED
-
-                }
+        if (data != null && data.hasExtra(extra2Watch)) {
+            try {
+                return TransactionResult.valueOf(data.getStringExtra(extra2Watch)!!.uppercase())
+            } catch (iae: IllegalArgumentException) {
+                Log.e(TAG, "Type received not recognised", iae)
+                return TransactionResult.FAILED
             }
         }
 
@@ -78,13 +74,15 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
     /**
      * Gets the receipt information from the intent response. It looks the merchant receipt
      * or the customer receipt based on parameter
-     * @param data intent received as a response to a one request to the payplaza apps
+     * @param data intent received as a response to a one request to the CM apps
      * @param isMerchantReceipt if true, function is going to look for merchant receipt. Otherwise
      * is going to look for customer receipt.
      */
     private fun getReceiptFromIntent(data: Intent, isMerchantReceipt: Boolean): ReceiptData? {
-        val receiptToGet: String = if (isMerchantReceipt) IntentHelper.EXTRA_MERCHANT_RECEIPT else IntentHelper.EXTRA_CUSTOMER_RECEIPT
-        val signatureToGet: String = if (isMerchantReceipt) IntentHelper.EXTRA_MERCHANT_SIGNATURE else IntentHelper.EXTRA_CUSTOMER_SIGNATURE
+        val receiptToGet: String =
+            if (isMerchantReceipt) IntentHelper.EXTRA_MERCHANT_RECEIPT else IntentHelper.EXTRA_CUSTOMER_RECEIPT
+        val signatureToGet: String =
+            if (isMerchantReceipt) IntentHelper.EXTRA_MERCHANT_SIGNATURE else IntentHelper.EXTRA_CUSTOMER_SIGNATURE
 
         if (data.hasExtra(receiptToGet)) {
             val receiptData = ReceiptData()
@@ -117,11 +115,12 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
         }
 
         resultData.apply {
-            tipAmount = if(IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_TIP_AMOUNT).isPresent) {
-                IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_TIP_AMOUNT).get()
-            } else {
-                null
-            }
+            tipAmount =
+                if (IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_TIP_AMOUNT).isPresent) {
+                    IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_TIP_AMOUNT).get()
+                } else {
+                    null
+                }
 
         }
 
@@ -155,7 +154,11 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
         }
 
         resultData.apply {
-            transactionDateTime = if (IntentUtil.getDate(intent, IntentHelper.EXTRA_TRANSACTION_DATE_TIME).isPresent ) {
+            transactionDateTime = if (IntentUtil.getDate(
+                    intent,
+                    IntentHelper.EXTRA_TRANSACTION_DATE_TIME
+                ).isPresent
+            ) {
                 IntentUtil.getDate(intent, IntentHelper.EXTRA_TRANSACTION_DATE_TIME).get()
 
             } else {
@@ -204,20 +207,27 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
      * are called on the callback too.
      * @see com.payplaza.androidposintegration.service.callback.beans.TransactionResultData
      * @see com.payplaza.androidposintegration.service.callback.TransactionCallback
-     * @param operationResult result of the intent received on library from payplaza apps
-     * @param data intent received as result from payplaza apps
+     * @param operationResult result of the intent received on library from CM apps
+     * @param data intent received as result from CM apps
      */
     private fun processResultFromTransaction(operationResult: Int, data: Intent) {
         if ((operationResult != Activity.RESULT_OK && operationResult != Activity.RESULT_CANCELED) || !data.hasExtra(
-                IntentHelper.EXTRA_ORD_REF)) {
-            Log.d(TAG, "Activity result not ok or no Order ref $operationResult ${data.hasExtra(
-                IntentHelper.EXTRA_ORD_REF)}")
+                IntentHelper.EXTRA_ORD_REF
+            )
+        ) {
+            Log.d(
+                TAG, "Activity result not ok or no Order ref $operationResult ${
+                    data.hasExtra(
+                        IntentHelper.EXTRA_ORD_REF
+                    )
+                }"
+            )
             txCallback?.onCrash()
 
         } else {
             val erroCode = getErrorCode(data)
             if (erroCode == ErrorCode.NO_ERROR.value) {
-                Log.d(TAG,"No_Error error code in result")
+                Log.d(TAG, "No_Error error code in result")
                 val txResult = matchTransactionResult(data, IntentHelper.EXTRA_TRANSACTION_RESULT)
                 val orderRef = data.getStringExtra(IntentHelper.EXTRA_ORD_REF)
                 val resultData = TransactionResultData(txResult, orderRef!!)
@@ -260,8 +270,8 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
      * are called on the callback too.
      * @see com.payplaza.androidposintegration.service.callback.beans.LastReceiptResultData
      * @see com.payplaza.androidposintegration.service.callback.ReceiptCallback
-     * @param operationResult result of the intent received on library from payplaza apps
-     * @param data intent received as result from payplaza apps
+     * @param operationResult result of the intent received on library from CM apps
+     * @param data intent received as result from CM apps
      */
     private fun processResultFromGetReceipt(operationResult: Int, data: Intent) {
         if (operationResult != Activity.RESULT_OK) {
@@ -297,8 +307,8 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
      * are called on the callback too.
      * @see com.payplaza.androidposintegration.service.callback.beans.LastReceiptResultData
      * @see com.payplaza.androidposintegration.service.callback.ReceiptCallback
-     * @param operationResult result of the intent received on library from payplaza apps
-     * @param data intent received as result from payplaza apps
+     * @param operationResult result of the intent received on library from CM apps
+     * @param data intent received as result from CM apps
      */
     private fun processResultFromTotals(operationResult: Int, data: Intent) {
         if (operationResult != Activity.RESULT_OK) {
@@ -343,22 +353,34 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
             // Check if the rest of the information is present
             var statusJson: String? = null
             if (data.hasExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_DATA)) {
-                statusJson = String(Base64.decode(data.getStringExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_DATA), 0))
+                statusJson = String(
+                    Base64.decode(
+                        data.getStringExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_DATA),
+                        0
+                    )
+                )
 
             }
 
             var statusErrorMessage: String? = null
             if (data.hasExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_ERROR)) {
-                statusErrorMessage = data.getStringExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_ERROR)
+                statusErrorMessage =
+                    data.getStringExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_ERROR)
 
             }
 
             val totalCount = data.getIntExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_TOTAL_COUNT, 0)
             if (statusJson != null) {
-                statusErrorMessage = (if (statusErrorMessage == null){"No error"} else {statusErrorMessage})
+                statusErrorMessage = (if (statusErrorMessage == null) {
+                    "No error"
+                } else {
+                    statusErrorMessage
+                })
                 statusesCallback!!.onResult(
                     TransactionStatusesData(
-                        StatusResponseParser.getTxStatuses(statusJson), statusErrorMessage, totalCount
+                        StatusResponseParser.getTxStatuses(statusJson),
+                        statusErrorMessage,
+                        totalCount
                     )
                 )
 
@@ -414,7 +436,8 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
         }
 
         infoResult.apply {
-            versionNumber = getStringExtraIfNotNull(data, IntentHelper.EXTRA_TERMINAL_VERSION_NUMBER)
+            versionNumber =
+                getStringExtraIfNotNull(data, IntentHelper.EXTRA_TERMINAL_VERSION_NUMBER)
 
         }
 
@@ -425,7 +448,8 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
             infoCallback!!.onCrash()
 
         } else {
-            val infoResult = TerminalInfoData(matchTransactionResult(data, IntentHelper.EXTRA_INFO_RESULT))
+            val infoResult =
+                TerminalInfoData(matchTransactionResult(data, IntentHelper.EXTRA_INFO_RESULT))
             if (infoResult.transactionResult == TransactionResult.FAILED) {
                 Log.d(TAG, "Transaction failed")
                 infoCallback?.onError(ErrorCode.INFO_REQUEST_FAILED)
@@ -433,7 +457,7 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
             } else {
                 getInfoFromInfoIntent(infoResult, data)
 
-                Log.d(TAG, "Received info from Payplaza apps ${infoResult}")
+                Log.d(TAG, "Received info from CM apps ${infoResult}")
                 infoCallback?.onResult(infoResult)
 
             }
@@ -448,10 +472,13 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
      */
     private fun processResultBasedOnRequest(intent: Intent) {
         val typeBroadcast = intent.getStringExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE)
-        val operationResult = intent.getIntExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, Activity.RESULT_CANCELED)
+        val operationResult = intent.getIntExtra(
+            IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT,
+            Activity.RESULT_CANCELED
+        )
         when (typeBroadcast) {
             IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION -> {
-                Log.d(TAG,"Received information about a transaction")
+                Log.d(TAG, "Received information about a transaction")
                 processResultFromTransaction(operationResult, intent)
 
             }
@@ -482,7 +509,7 @@ class OperationResultBroadcastReceiver: BroadcastReceiver() {
         Log.d(TAG, "Received internal broadcast with the response data $data")
 
         if (data != null) {
-            Log.d(TAG,"Data is not null")
+            Log.d(TAG, "Data is not null")
 
             if (!data.hasExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE)) {
                 Log.e(TAG, "Data has no information about received type")

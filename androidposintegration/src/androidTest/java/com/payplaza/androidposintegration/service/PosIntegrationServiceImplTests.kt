@@ -5,7 +5,6 @@ import android.app.Instrumentation
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.Intents.intending
@@ -13,18 +12,16 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.payplaza.androidposintegration.BuildConfig
+import com.cm.androidposintegration.BuildConfig
 import com.cm.androidposintegration.activity.IntegrationActivity
 import com.cm.androidposintegration.beans.TransactionData
-import com.cm.androidposintegration.beans.*
 import com.cm.androidposintegration.enums.TransactionType
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_ERROR_CODE
-import com.cm.androidposintegration.intent.IntentHelper.EXTRA_INFORMATION_VALUE_RECEIPT
-import com.cm.androidposintegration.intent.IntentHelper.EXTRA_INFORMATION_VALUE_STATUSES
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_INTERNAL_INTENT_TYPE
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_MERCHANT_RECEIPT
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_ORD_REF
+import com.cm.androidposintegration.intent.IntentHelper.EXTRA_SDK_VERSION
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_TRANSACTION_RESULT
 import com.cm.androidposintegration.service.PosIntegrationServiceImpl
 import com.cm.androidposintegration.service.callback.beans.LastReceiptResultData
@@ -105,7 +102,8 @@ class PosIntegrationServiceImplTests {
         intended(
             allOf(
                 hasComponent(IntegrationActivity::class.java.name),
-                hasExtra(EXTRA_INTERNAL_INTENT_TYPE, EXTRA_INFORMATION_VALUE_TRANSACTION)
+                hasExtra(EXTRA_INTERNAL_INTENT_TYPE, EXTRA_INFORMATION_VALUE_TRANSACTION),
+                hasExtra(EXTRA_SDK_VERSION, BuildConfig.VERSION_NAME)
             )
         )
 
