@@ -1,2 +1,5 @@
 jdk:
   - openjdk11
+before_install:
+  - echo "Setting up environment"
+  - export JAVA_TOOL_OPTIONS=""
