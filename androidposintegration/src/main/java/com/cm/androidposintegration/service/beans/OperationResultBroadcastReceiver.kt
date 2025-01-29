@@ -18,6 +18,7 @@ import com.cm.androidposintegration.service.callback.TransactionCallback
 import com.cm.androidposintegration.service.callback.beans.*
 import com.cm.androidposintegration.service.callback.json.StatusResponseParser
 import java.lang.IllegalArgumentException
+import java.math.BigDecimal
 import java.util.*
 
 class OperationResultBroadcastReceiver : BroadcastReceiver() {
@@ -38,20 +39,33 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
     private fun getErrorCode(data: Intent?): Int {
         if (data != null) {
             return data.getIntExtra(IntentHelper.EXTRA_ERROR_CODE, ErrorCode.UNKNOWN_ERROR.value)
-
         }
-
         return ErrorCode.UNKNOWN_ERROR.value
-
     }
 
     private fun getStringExtraIfNotNull(data: Intent, extraName: String): String? {
-        if (data.hasExtra(extraName)) {
-            return data.getStringExtra(extraName)
-
+        return if (data.hasExtra(extraName)) {
+            data.getStringExtra(extraName)
+        } else {
+            null
         }
+    }
 
-        return null
+    private fun getIntExtraIfNotNull(data: Intent, extraName: String): Int? {
+        return if (data.hasExtra(extraName)) {
+            data.getIntExtra(extraName, 0)
+        } else {
+            null
+        }
+    }
+
+    private fun getBigDecimalExtraIfNotNull(data: Intent, extraName: String): BigDecimal? {
+        val bigDecimalOptionalFromIntent = IntentUtil.getBigDecimal(data, extraName)
+        return if (bigDecimalOptionalFromIntent.isPresent) {
+            return bigDecimalOptionalFromIntent.get()
+        } else {
+            null
+        }
     }
 
     /**
@@ -59,15 +73,15 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
      * @param data intent received as result form CM apps
      */
     private fun matchTransactionResult(data: Intent?, extra2Watch: String): TransactionResult {
-        if (data != null && data.hasExtra(extra2Watch)) {
+        if (data != null && (data.hasExtra(extra2Watch))) {
             try {
                 return TransactionResult.valueOf(data.getStringExtra(extra2Watch)!!.uppercase())
+
             } catch (iae: IllegalArgumentException) {
                 Log.e(TAG, "Type received not recognised", iae)
                 return TransactionResult.FAILED
             }
         }
-
         return TransactionResult.CANCELED
     }
 
@@ -111,19 +125,13 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
             } else {
                 null
             }
-
-        }
-
-        resultData.apply {
             tipAmount =
                 if (IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_TIP_AMOUNT).isPresent) {
                     IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_TIP_AMOUNT).get()
                 } else {
                     null
                 }
-
         }
-
     }
 
     /**
@@ -136,24 +144,9 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
     private fun addExtraFields(resultData: TransactionResultData, intent: Intent) {
         resultData.apply {
             authResponseCode = intent.getStringExtra(IntentHelper.EXTRA_AUTH_RESPONSE_CODE)
-        }
-
-        resultData.apply {
             cardEntryMode = intent.getStringExtra(IntentHelper.EXTRA_CARD_ENTRY_MODE)
-
-        }
-
-        resultData.apply {
             ecrId = intent.getStringExtra(IntentHelper.EXTRA_ECR_ID)
-
-        }
-
-        resultData.apply {
             processorName = intent.getStringExtra(IntentHelper.EXTRA_PROCESSOR_NAME)
-
-        }
-
-        resultData.apply {
             transactionDateTime = if (IntentUtil.getDate(
                     intent,
                     IntentHelper.EXTRA_TRANSACTION_DATE_TIME
@@ -165,37 +158,30 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                 null
 
             }
-        }
-
-        resultData.apply {
             transactionId = intent.getStringExtra(IntentHelper.EXTRA_TRANSACTION_ID)
-
-        }
-
-        resultData.apply {
             cardScheme = intent.getStringExtra(IntentHelper.EXTRA_CARD_SCHEME)
-
-        }
-
-        resultData.apply {
             aid = intent.getStringExtra(IntentHelper.EXTRA_AID)
-
-        }
-
-        resultData.apply {
             cardNumber = intent.getStringExtra(IntentHelper.EXTRA_CARD_NUMBER)
-        }
-
-        resultData.apply {
             cardType = intent.getIntExtra(IntentHelper.EXTRA_CARD_TYPE, 0)
-
-        }
-
-        resultData.apply {
             stan = intent.getStringExtra(IntentHelper.EXTRA_STAN)
-
         }
 
+    }
+
+    private fun addMatFields(resultData: TransactionResultData, intent: Intent) {
+        resultData.apply {
+            isProcessedOffline =
+                intent.getBooleanExtra(IntentHelper.EXTRA_IS_TRANSACTION_PROCESSED_OFFLINE, false)
+            storedTransactionsCount =
+                intent.getIntExtra(IntentHelper.EXTRA_STORED_OFFLINE_TRANSACTIONS_COUNT, 0)
+            val storedSaleAmountOptional =
+                IntentUtil.getBigDecimal(intent, IntentHelper.EXTRA_STORED_OFFLINE_SALE_AMOUNT)
+            storedSaleAmount = if (storedSaleAmountOptional.isPresent) {
+                storedSaleAmountOptional.get()
+            } else {
+                BigDecimal(0)
+            }
+        }
     }
 
     /**
@@ -211,9 +197,8 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
      * @param data intent received as result from CM apps
      */
     private fun processResultFromTransaction(operationResult: Int, data: Intent) {
-        if ((operationResult != Activity.RESULT_OK && operationResult != Activity.RESULT_CANCELED) || !data.hasExtra(
-                IntentHelper.EXTRA_ORD_REF
-            )
+        if ((operationResult != Activity.RESULT_OK && operationResult != Activity.RESULT_CANCELED) ||
+            (!data.hasExtra(IntentHelper.EXTRA_ORD_REF) && !data.hasExtra(IntentHelper.EXTRA_ERROR_CODE))
         ) {
             Log.d(
                 TAG, "Activity result not ok or no Order ref $operationResult ${
@@ -233,14 +218,10 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                 val resultData = TransactionResultData(txResult, orderRef!!)
                 addAmountFields(resultData, data)
                 addExtraFields(resultData, data)
+                addMatFields(resultData, data)
                 resultData.apply {
                     merchantReceipt = getReceiptFromIntent(data, true)
-
-                }
-
-                resultData.apply {
                     customerReceipt = getReceiptFromIntent(data, false)
-
                 }
 
                 txCallback?.onResult(resultData)
@@ -252,7 +233,7 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                     txCallback?.onError(errorData)
 
                 } else {
-                    Log.d(TAG, "No error or unknown error code in transaction result ${erroCode}")
+                    Log.d(TAG, "No error or unknown error code in transaction result $erroCode")
                     txCallback?.onCrash()
 
                 }
@@ -288,12 +269,9 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                 val errorData = ErrorCode.getByValue(errorCode)
                 if (errorData != null) {
                     receiptCallback?.onError(errorData)
-
                 } else {
                     receiptCallback?.onCrash()
-
                 }
-
             }
         }
     }
@@ -322,8 +300,6 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                 }
                 val receiptResultData = LastReceiptResultData(receipt)
                 totalsCallback?.onResult(receiptResultData)
-
-
             } else {
                 val errorData = ErrorCode.getByValue(errorCode)
                 if (errorData != null) {
@@ -359,23 +335,15 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                         0
                     )
                 )
-
             }
-
             var statusErrorMessage: String? = null
             if (data.hasExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_ERROR)) {
                 statusErrorMessage =
                     data.getStringExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_ERROR)
-
             }
-
             val totalCount = data.getIntExtra(IntentHelper.EXTRA_TRANSACTION_STATUS_TOTAL_COUNT, 0)
             if (statusJson != null) {
-                statusErrorMessage = (if (statusErrorMessage == null) {
-                    "No error"
-                } else {
-                    statusErrorMessage
-                })
+                statusErrorMessage = (statusErrorMessage ?: "No error")
                 statusesCallback!!.onResult(
                     TransactionStatusesData(
                         StatusResponseParser.getTxStatuses(statusJson),
@@ -383,7 +351,6 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
                         totalCount
                     )
                 )
-
             } else {
                 statusesCallback!!.onError(ErrorCode.TRANSACTION_STATUS_ERROR)
 
@@ -394,53 +361,27 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
     private fun getInfoFromInfoIntent(infoResult: TerminalInfoData, data: Intent) {
         infoResult.apply {
             storeName = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_NAME)
-
-        }
-
-        infoResult.apply {
             storeAddress = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_ADDRESS)
-
-        }
-
-        infoResult.apply {
             storeCity = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_CITY)
-
-        }
-
-        infoResult.apply {
             storeZipCode = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_ZIP_CODE)
-
-        }
-
-        infoResult.apply {
             storeLanguage = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_LANGUAGE)
-
-        }
-
-        infoResult.apply {
             storeCountry = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_COUNTRY)
-
-        }
-
-        val currencySimbol = getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_CURRENCY)
-        if (currencySimbol != null) {
-            infoResult.apply {
-                storeCurrency = Currency.getInstance(currencySimbol)
-
+            getStringExtraIfNotNull(data, IntentHelper.EXTRA_STORE_CURRENCY)?.let {
+                storeCurrency = Currency.getInstance(it)
             }
-        }
-
-        infoResult.apply {
             deviceSerialNumber = getStringExtraIfNotNull(data, IntentHelper.EXTRA_DEVICE_SERIAL)
-
-        }
-
-        infoResult.apply {
             versionNumber =
                 getStringExtraIfNotNull(data, IntentHelper.EXTRA_TERMINAL_VERSION_NUMBER)
-
+            isMatAllowed = data.getBooleanExtra(IntentHelper.EXTRA_IS_MAT_ALLOWED, false)
+            maxOfflineSaleAmount =
+                getBigDecimalExtraIfNotNull(data, IntentHelper.EXTRA_MAX_OFFLINE_SALE_AMOUNT)
+            maxOfflineTransactionsCount =
+                getIntExtraIfNotNull(data, IntentHelper.EXTRA_MAX_OFFLINE_TRANSACTIONS_COUNT)
+            maxOfflineSaleAmountPerTransaction = getBigDecimalExtraIfNotNull(
+                data,
+                IntentHelper.EXTRA_MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION
+            )
         }
-
     }
 
     private fun processResultFromInfoRequest(operationResult: Int, data: Intent) {
@@ -457,7 +398,7 @@ class OperationResultBroadcastReceiver : BroadcastReceiver() {
             } else {
                 getInfoFromInfoIntent(infoResult, data)
 
-                Log.d(TAG, "Received info from CM apps ${infoResult}")
+                Log.d(TAG, "Received info from CM apps $infoResult")
                 infoCallback?.onResult(infoResult)
 
             }

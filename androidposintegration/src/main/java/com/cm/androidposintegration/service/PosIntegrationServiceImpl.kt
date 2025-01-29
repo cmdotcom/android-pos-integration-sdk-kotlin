@@ -79,7 +79,7 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
         // send the intent to start the operation in CM apps
         contextIntegration.startActivity(intent)
         operationInProgress = true
-        Log.w("","sendIntentForOperation - operationInProgress $operationInProgress")
+        Log.w("", "sendIntentForOperation - operationInProgress $operationInProgress")
         return true
 
     }
@@ -145,6 +145,24 @@ class PosIntegrationServiceImpl(private var contextIntegration: Context) : PosIn
 
         Log.d(TAG, "Version name of this library is " + BuildConfig.VERSION_NAME)
         intentData.putString(IntentHelper.EXTRA_SDK_VERSION, BuildConfig.VERSION_NAME)
+        data.maxOfflineTransactionsCount?.let { maxOfflineTransactionsCount ->
+            intentData.putInt(
+                IntentHelper.EXTRA_MAX_OFFLINE_TRANSACTIONS_COUNT,
+                maxOfflineTransactionsCount
+            )
+        }
+        data.maxOfflineSaleAmount?.let { maxOfflineSaleAmount ->
+            intentData.putSerializable(
+                IntentHelper.EXTRA_MAX_OFFLINE_SALE_AMOUNT,
+                maxOfflineSaleAmount
+            )
+        }
+        data.maxOfflineSaleAmountPerTransaction?.let { maxOfflineSaleAmountPerTransaction ->
+            intentData.putSerializable(
+                IntentHelper.EXTRA_MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION,
+                maxOfflineSaleAmountPerTransaction
+            )
+        }
 
         lastOrderRef = data.orderReference
 
