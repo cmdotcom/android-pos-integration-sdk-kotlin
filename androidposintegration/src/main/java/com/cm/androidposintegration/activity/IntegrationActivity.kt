@@ -13,17 +13,23 @@ import com.cm.androidposintegration.BuildConfig
 open class IntegrationActivity : AppCompatActivity() {
 
     private var TAG = IntegrationActivity::class.java.simpleName
-    private var intentPayment : Intent? = null
+    private var intentPayment: Intent? = null
 
-    private lateinit var viewModel : IntegrationViewModel
+    private lateinit var viewModel: IntegrationViewModel
 
     private val getTerminalResult =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            Log.d(TAG, "Received response from CM apps ${viewModel.getOperationType()}, ${result.resultCode}, ${result.data}")
+            Log.d(
+                TAG,
+                "Received response from CM apps ${viewModel.getOperationType()}, ${result.resultCode}, ${result.data}"
+            )
             val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
-            internalBroadcast.putExtra(IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT, result.resultCode)
+            internalBroadcast.putExtra(
+                IntentHelper.EXTRA_INTERNAL_OPERATION_RESULT,
+                result.resultCode
+            )
 
             // Process the information received in the intent
             if (result.data != null) {
@@ -81,7 +87,10 @@ open class IntegrationActivity : AppCompatActivity() {
     }
 
     private fun createBroadcastForError(): Intent {
-        Log.w(TAG, "No CM payment apps in the device, intent for kicking them wrongly created or Terminal crashed")
+        Log.w(
+            TAG,
+            "No CM payment apps in the device, intent for kicking them wrongly created or Terminal crashed"
+        )
         Log.w(TAG, "Starting onCrash callback mechanism.  ${viewModel.getOperationType()}")
         val internalBroadcast = Intent(IntentHelper.INTEGRATION_BROADCAST_INTENT)
         sendInternalBroadcast(viewModel.getOperationType(), internalBroadcast)
@@ -91,8 +100,8 @@ open class IntegrationActivity : AppCompatActivity() {
     private fun checkAndSendIntent() {
         if (intentPayment != null) {
             intentPayment!!.putExtras(intent)
-            Log.d(TAG, "Sending intent ${intentPayment}")
-            if(intentPayment!!.resolveActivity(getPackageManager()) != null) {
+            Log.d(TAG, "Sending intent $intentPayment")
+            if (intentPayment!!.resolveActivity(getPackageManager()) != null) {
                 getTerminalResult.launch(intentPayment)
 
             } else {
@@ -113,12 +122,12 @@ open class IntegrationActivity : AppCompatActivity() {
         viewModel =  ViewModelProvider(this)[IntegrationViewModel::class.java]
         val operationType = intent.getStringExtra(IntentHelper.EXTRA_INTERNAL_INTENT_TYPE)
         if (savedInstanceState == null && operationType != null) {
-            Log.d(TAG,"\"Created\" activity for kick CM Terminal")
+            Log.d(TAG, "\"Created\" activity for kick CM Terminal")
             createIntentAndOperationType(operationType)
             checkAndSendIntent()
 
         } else if (savedInstanceState == null && operationType == null) {
-            Log.d(TAG,"No OperationType received. Ending the request")
+            Log.d(TAG, "No OperationType received. Ending the request")
             sendBroadcast(createBroadcastForError())
             finish()
 
@@ -138,31 +147,46 @@ open class IntegrationActivity : AppCompatActivity() {
     private fun sendInternalBroadcast(requestCode: Int, internalBroadcast: Intent) {
         when (requestCode) {
             RequestId.TRANSACTION_REQUEST_ID -> {
-                internalBroadcast.putExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION)
+                internalBroadcast.putExtra(
+                    IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE,
+                    IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION
+                )
 
             }
 
             RequestId.TRANSACTION_STATUS_REQUEST_ID -> {
-                internalBroadcast.putExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_STATUSES)
+                internalBroadcast.putExtra(
+                    IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE,
+                    IntentHelper.EXTRA_INFORMATION_VALUE_STATUSES
+                )
 
             }
 
             RequestId.LAST_RECEIPT_REQUEST_ID -> {
-                internalBroadcast.putExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_RECEIPT)
+                internalBroadcast.putExtra(
+                    IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE,
+                    IntentHelper.EXTRA_INFORMATION_VALUE_RECEIPT
+                )
 
             }
 
             RequestId.DAY_TOTALS -> {
-                internalBroadcast.putExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_TOTALS)
+                internalBroadcast.putExtra(
+                    IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE,
+                    IntentHelper.EXTRA_INFORMATION_VALUE_TOTALS
+                )
 
             }
 
             RequestId.INFO_REQUEST -> {
-                internalBroadcast.putExtra(IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE, IntentHelper.EXTRA_INFORMATION_VALUE_INFO)
+                internalBroadcast.putExtra(
+                    IntentHelper.EXTRA_INFORMATION_RECEIVED_TYPE,
+                    IntentHelper.EXTRA_INFORMATION_VALUE_INFO
+                )
 
             }
 
-            else -> Log.w(TAG,"Request Id Code in the response not recognized")
+            else -> Log.w(TAG, "Request Id Code in the response not recognized")
 
         }
     }

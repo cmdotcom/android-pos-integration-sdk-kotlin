@@ -8,25 +8,30 @@ import java.math.BigDecimal
 import java.util.*
 
 @Parcelize
-data class TransactionResultData (val transactionResult: TransactionResult,
-                                  val orderReference: String,
-                                  var amount: BigDecimal? = null,
-                                  var authResponseCode: String? = null,
-                                  var cardEntryMode: String? = null,
-                                  var ecrId: String? = null,
-                                  var processorName: String? = null,
-                                  var transactionDateTime: Date? = null,
-                                  var transactionId: String? = null,
-                                  var cardScheme: String? = null,
-                                  var aid: String? = null,
-                                  var cardNumber: String? = null,
-                                  var cardType: Int? = null,
-                                  var stan: String? = null,
-                                  var merchantReceipt: ReceiptData? = null,
-                                  var customerReceipt: ReceiptData? = null,
-                                  var tipAmount: BigDecimal? = null): Parcelable {
+data class TransactionResultData(
+    val transactionResult: TransactionResult,
+    val orderReference: String,
+    var amount: BigDecimal? = null,
+    var authResponseCode: String? = null,
+    var cardEntryMode: String? = null,
+    var ecrId: String? = null,
+    var processorName: String? = null,
+    var transactionDateTime: Date? = null,
+    var transactionId: String? = null,
+    var cardScheme: String? = null,
+    var aid: String? = null,
+    var cardNumber: String? = null,
+    var cardType: Int? = null,
+    var stan: String? = null,
+    var merchantReceipt: ReceiptData? = null,
+    var customerReceipt: ReceiptData? = null,
+    var tipAmount: BigDecimal? = null,
+    var isProcessedOffline: Boolean? = null,
+    var storedTransactionsCount: Int? = null,
+    var storedSaleAmount: BigDecimal? = null
+) : Parcelable {
 
-    override fun toString() : String {
+    override fun toString(): String {
         return "TransactionResultData { 'TransactionResult' : $transactionResult, " +
                 "'OrderReference' : $orderReference" +
                 "'Amount' : $amount, " +
@@ -41,7 +46,11 @@ data class TransactionResultData (val transactionResult: TransactionResult,
                 "'aid' : ${aid}, " +
                 "'cardNumber' : ${cardNumber}, " +
                 "'cardType' : ${cardType}, " +
-                "'stan' : ${stan} }"
+                "'stan' : ${stan}, " +
+                "'tipAmount' : $tipAmount, " +
+                "'isProcessedOffline' : $isProcessedOffline" +
+                "'currentOfflineTransactionsCount' : $storedTransactionsCount" +
+                "'currentOfflineSaleAmount' : $storedSaleAmount}"
     }
 
 }

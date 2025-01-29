@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.cm.androidposintegration.service.PosIntegrationServiceImpl
 
+@Suppress("unused")
 object AndroidPosIntegration {
 
     private val TAG = AndroidPosIntegration::class.java.simpleName

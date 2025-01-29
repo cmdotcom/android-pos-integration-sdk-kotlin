@@ -19,17 +19,16 @@ import com.cm.androidposintegration.enums.TransactionType
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_ERROR_CODE
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_INFORMATION_VALUE_TRANSACTION
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_INTERNAL_INTENT_TYPE
+import com.cm.androidposintegration.intent.IntentHelper.EXTRA_MAX_OFFLINE_SALE_AMOUNT
+import com.cm.androidposintegration.intent.IntentHelper.EXTRA_MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION
+import com.cm.androidposintegration.intent.IntentHelper.EXTRA_MAX_OFFLINE_TRANSACTIONS_COUNT
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_MERCHANT_RECEIPT
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_ORD_REF
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_SDK_VERSION
 import com.cm.androidposintegration.intent.IntentHelper.EXTRA_TRANSACTION_RESULT
 import com.cm.androidposintegration.service.PosIntegrationServiceImpl
-import com.cm.androidposintegration.service.callback.beans.LastReceiptResultData
-import com.cm.androidposintegration.service.callback.ReceiptCallback
-import com.cm.androidposintegration.service.callback.StatusesCallback
 import com.cm.androidposintegration.service.callback.TransactionCallback
 import com.cm.androidposintegration.service.callback.beans.ErrorCode
-import com.cm.androidposintegration.service.callback.beans.TransactionStatusesData
 import com.cm.androidposintegration.service.callback.beans.TransactionResultData
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.After
@@ -49,6 +48,9 @@ class PosIntegrationServiceImplTests {
 
     private lateinit var targetContext: Context
     private lateinit var receipt: Array<String>
+    private val maxStoredTransactionsCount = 50
+    private val maxStoredTransactionSaleAmount = BigDecimal(25000.0)
+    private val maxStoredTransactionSaleAmountPerTransaction = BigDecimal(250.0)
 
     inner class TestBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
@@ -93,7 +95,11 @@ class PosIntegrationServiceImplTests {
             BigDecimal(0.50),
             Currency.getInstance("EUR"),
             "0123-12345"
-        )
+        ).apply {
+            maxOfflineTransactionsCount = maxStoredTransactionsCount
+            maxOfflineSaleAmount = maxStoredTransactionSaleAmount
+            maxOfflineSaleAmountPerTransaction = maxStoredTransactionSaleAmountPerTransaction
+        }
 
         service.doTransaction(data, callback)
 
@@ -103,7 +109,13 @@ class PosIntegrationServiceImplTests {
             allOf(
                 hasComponent(IntegrationActivity::class.java.name),
                 hasExtra(EXTRA_INTERNAL_INTENT_TYPE, EXTRA_INFORMATION_VALUE_TRANSACTION),
-                hasExtra(EXTRA_SDK_VERSION, BuildConfig.VERSION_NAME)
+                hasExtra(EXTRA_SDK_VERSION, BuildConfig.VERSION_NAME),
+                hasExtra(EXTRA_MAX_OFFLINE_TRANSACTIONS_COUNT, maxStoredTransactionsCount),
+                hasExtra(EXTRA_MAX_OFFLINE_SALE_AMOUNT, maxStoredTransactionSaleAmount),
+                hasExtra(
+                    EXTRA_MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION,
+                    maxStoredTransactionSaleAmountPerTransaction
+                )
             )
         )
 
@@ -112,91 +124,15 @@ class PosIntegrationServiceImplTests {
         resultIntent.putExtra(EXTRA_TRANSACTION_RESULT, "success")
         resultIntent.putExtra(EXTRA_ERROR_CODE, 0)
         resultIntent.putExtra(EXTRA_MERCHANT_RECEIPT, receipt)
+        resultIntent.putExtra(EXTRA_MAX_OFFLINE_TRANSACTIONS_COUNT, maxStoredTransactionsCount)
+        resultIntent.putExtra(EXTRA_MAX_OFFLINE_SALE_AMOUNT, maxStoredTransactionSaleAmount)
+        resultIntent.putExtra(
+            EXTRA_MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION,
+            maxStoredTransactionSaleAmountPerTransaction
+        )
         val activityResult = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
 
         intending(hasAction(BuildConfig.ACTION_TRANSACTION)).respondWith(activityResult)
 
     }
-
-    /*@Test
-    fun transactionStatusesTest() {
-        val service = PosIntegrationServiceImpl(targetContext)
-        val callback = object : StatusesCallback {
-            override fun onResult(data: TransactionStatusesData) {
-                // Default implementation
-            }
-
-            override fun onError(error: ErrorCode) {
-                // Default implementation
-            }
-
-            override fun onCrash() {
-                // Default implementation
-            }
-
-        }
-
-        val requestStatusData = RequestStatusData("876432")
-
-
-        service.transactionStatuses(requestStatusData, callback)
-
-        // Check that doTransaction calls the ecr app
-        intended(
-            allOf(
-                hasComponent(IntegrationActivity::class.java.name),
-                hasExtra(EXTRA_INTERNAL_INTENT_TYPE, EXTRA_INFORMATION_VALUE_STATUSES)
-            )
-        )
-
-        val resultIntent = Intent()
-        resultIntent.putExtra(EXTRA_ORD_REF, "0123-12345")
-        resultIntent.putExtra(EXTRA_TRANSACTION_RESULT, "success")
-        resultIntent.putExtra(EXTRA_ERROR_CODE, 0)
-        resultIntent.putExtra(EXTRA_MERCHANT_RECEIPT, receipt)
-        val activityResult = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
-
-        intending(hasAction(BuildConfig.ACTION_STATUSES)).respondWith(activityResult)
-
-    }*/
-
-    /*@Test
-    fun getLastReceiptTest() {
-        val service = PosIntegrationServiceImpl(targetContext)
-        val callback = object : ReceiptCallback {
-            override fun onResult(data: LastReceiptResultData) {
-                assert(data.receiptData != null)
-            }
-
-            override fun onError(error: ErrorCode) {
-                // Should not be called
-            }
-
-            override fun onCrash() {
-                // Should not be called
-            }
-
-        }
-
-        val options = LastReceiptOptions(true)
-        service.getLastReceipt(options, callback)
-
-        // Check that doTransaction calls the ecr app
-        intended(
-            allOf(
-                hasComponent(IntegrationActivity::class.java.name),
-                hasExtra(EXTRA_INTERNAL_INTENT_TYPE, EXTRA_INFORMATION_VALUE_RECEIPT)
-            )
-        )
-
-        val resultIntent = Intent()
-        resultIntent.putExtra(EXTRA_ORD_REF, "0123-12345")
-        resultIntent.putExtra(EXTRA_TRANSACTION_RESULT, "success")
-        resultIntent.putExtra(EXTRA_ERROR_CODE, 0)
-        resultIntent.putExtra(EXTRA_MERCHANT_RECEIPT, receipt)
-        val activityResult = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
-
-        intending(hasAction(BuildConfig.ACTION_TRANSACTION)).respondWith(activityResult)
-
-    }*/
 }

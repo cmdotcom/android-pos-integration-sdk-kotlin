@@ -34,6 +34,11 @@ object IntentHelper {
     const val EXTRA_USE_PROC_STYLE_PROTOCOL = "com.payplaza.extra.USE_PROC_STYLE_PROTOCOL"
     const val EXTRA_DAY_TOTALS_FROM = "com.payplaza.extra.DAY_TOTALS_FROM"
     const val EXTRA_SDK_VERSION = "com.payplaza.extra.SDK_VERSION"
+    const val EXTRA_MAX_OFFLINE_TRANSACTIONS_COUNT =
+        "com.payplaza.extra.MAX_OFFLINE_TRANSACTIONS_COUNT"
+    const val EXTRA_MAX_OFFLINE_SALE_AMOUNT = "com.payplaza.extra.MAX_OFFLINE_SALE_AMOUNT"
+    const val EXTRA_MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION =
+        "com.payplaza.extra.MAX_OFFLINE_SALE_AMOUNT_PER_TRANSACTION"
 
     // Payment Response extras.
     const val EXTRA_TRANSACTION_RESULT = "com.payplaza.extra.TRANSACTION_RESULT"
@@ -46,11 +51,13 @@ object IntentHelper {
     // Statuses Response extras.
     const val EXTRA_TRANSACTION_STATUS_DATA = "com.payplaza.extra.TRANSACTION_STATUS_DATA"
     const val EXTRA_TRANSACTION_STATUS_ERROR = "com.payplaza.extra.ERROR_MESSAGE"
-    const val EXTRA_TRANSACTION_STATUS_TOTAL_COUNT = "com.payplaza.extra.TRANSACTION_STATUS_TOTAL_COUNT"
+    const val EXTRA_TRANSACTION_STATUS_TOTAL_COUNT =
+        "com.payplaza.extra.TRANSACTION_STATUS_TOTAL_COUNT"
 
     const val EXTRA_INTERNAL_OPERATION_RESULT = "com.payplaza.extra.OPERATION_RESULT"
     const val EXTRA_INTERNAL_INTENT_TYPE = "com.payplaza.extra.INTEGRATION_OPERATION_TYPE"
-    const val EXTRA_INFORMATION_RECEIVED_TYPE = "com.payplaza.extra.integration.information.received.type"
+    const val EXTRA_INFORMATION_RECEIVED_TYPE =
+        "com.payplaza.extra.integration.information.received.type"
     const val EXTRA_INFORMATION_VALUE_TRANSACTION = "transaction"
     const val EXTRA_INFORMATION_VALUE_STATUSES = "statuses"
     const val EXTRA_INFORMATION_VALUE_RECEIPT = "receipt"
@@ -78,6 +85,13 @@ object IntentHelper {
     const val EXTRA_STORE_CURRENCY = "com.payplaza.extra.STORE_CURRENCY"
     const val EXTRA_DEVICE_SERIAL = "com.payplaza.extra.DEVICE_SERIAL"
     const val EXTRA_TERMINAL_VERSION_NUMBER = "com.payplaza.extra.TERMINAL_VERSION_NUMBER"
+    const val EXTRA_IS_MAT_ALLOWED = "com.payplaza.extra.IS_MAT_ALLOWED"
+
+    const val EXTRA_STORED_OFFLINE_TRANSACTIONS_COUNT =
+        "com.payplaza.extra.CURRENT_OFFLINE_TRANSACTIONS_COUNT"
+    const val EXTRA_STORED_OFFLINE_SALE_AMOUNT = "com.paypla.extra.CURRENT_OFFLINE_SALE_AMOUNT"
+    const val EXTRA_IS_TRANSACTION_PROCESSED_OFFLINE =
+        "com.payplaza.IS_TRANSACTION_PROCESSED_OFFLINE"
 
     const val MAX_ORDER_REF_LENGTH = 14
     const val TIMEOUT_REACHED = 1
