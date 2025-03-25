@@ -19,7 +19,7 @@ android {
     defaultConfig {
         minSdkVersion 25
         targetSdkVersion 31
-        versionCode 18
+        versionCode 20
         versionName "1.2.0"
         buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
