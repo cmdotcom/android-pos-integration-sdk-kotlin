@@ -10,6 +10,8 @@ This repository contains the implementation of a library that allows your applic
 
 | SDK   | Terminal |
 | ----- |----------|
+| 1.2.1 | 2.12.0   |
+| 1.2.0 | 2.11.0   |
 | 1.1.4 | 2.7.0    |
 | 1.1.3 | 2.0.1    |
 | 1.1.2 | 2.0.0    |
